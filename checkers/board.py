@@ -16,33 +16,42 @@ class Board:
             for col in range(row % 2, COLS, 2):
                 pygame.draw.rect(win, RED, (row*SQUARE_SIZE, col *SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
-    def evaluate(self):
+    def evaluate(self, ai_color):
         # weights
         MATERIAL_W, KING_W = 1.0, 3.0
         KING_CENTER_W, KING_EDGE_P = 0.1, -0.05
         MOVE_PENALTY = 0.01
 
+        # Determine opponent color
+        opponent_color = WHITE if ai_color == RED else RED
+
         # 1) Material & Kings
-        score = MATERIAL_W * (self.white_left - self.red_left)
-        score += KING_W * (self.white_kings - self.red_kings)
+        ai_material = self.white_left if ai_color == WHITE else self.red_left
+        opp_material = self.red_left if ai_color == WHITE else self.white_left
+
+        ai_kings = self.white_kings if ai_color == WHITE else self.red_kings
+        opp_kings = self.red_kings if ai_color == WHITE else self.white_kings
+
+        score = MATERIAL_W * (ai_material - opp_material)
+        score += KING_W * (ai_kings - opp_kings)
 
         # 2) King positional bonuses/penalties
         for r in range(ROWS):
             for c in range(COLS):
                 piece = self.board[r][c]
                 if piece != 0 and piece.king:
-                    if piece.color == WHITE:
-                        # bonus for center
+                    if piece.color == ai_color:
                         if 2 <= r <= 5 and 2 <= c <= 5:
                             score += KING_CENTER_W
-                        # penalize edge-back loops
-                        if r == ROWS - 1 and c in (0, COLS - 1):
-                            score += KING_EDGE_P
-                    else:  # RED
+                        if (ai_color == WHITE and r == ROWS - 1) or (ai_color == RED and r == 0):
+                            if c in (0, COLS - 1):
+                                score += KING_EDGE_P
+                    elif piece.color == opponent_color:
                         if 2 <= r <= 5 and 2 <= c <= 5:
                             score -= KING_CENTER_W
-                        if r == 0 and c in (0, COLS - 1):
-                            score -= KING_EDGE_P
+                        if (opponent_color == WHITE and r == ROWS - 1) or (opponent_color == RED and r == 0):
+                            if c in (0, COLS - 1):
+                                score -= KING_EDGE_P
 
         # 3) Tempo penalty for non-capture moves
         score -= MOVE_PENALTY * self.no_capture_moves

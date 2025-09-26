@@ -69,7 +69,8 @@ def main():
                 -float('inf'),
                 float('inf'),
                 is_max,
-                game
+                game,
+                WHITE
             )
             game.ai_move(new_board)
             pygame.time.delay(200)
@@ -82,7 +83,8 @@ def main():
                 -float('inf'),
                 float('inf'),
                 False,
-                game
+                game,
+                RED
             )
             game.ai_move(new_board)
 

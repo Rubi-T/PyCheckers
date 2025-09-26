@@ -4,35 +4,35 @@ import pygame
 RED = (255,0,0)
 WHITE = (255, 255, 255)
 
-def minimax(position, depth, alpha, beta, max_player, game):
+def minimax(position, depth, alpha, beta, max_player, game, ai_color):
     if depth == 0 or position.winner() != None:
-        return position.evaluate(), position
-    
+        return position.evaluate(ai_color), position
+
     if max_player:
         maxEval = float('-inf')
         best_move = None
-        for move in get_all_moves(position, WHITE, game):
-            evaluation = minimax(move, depth-1, alpha, beta, False, game)[0]
+        current_color = ai_color
+        for move in get_all_moves(position, current_color, game):
+            evaluation = minimax(move, depth-1, alpha, beta, False, game, ai_color)[0]
             if evaluation > maxEval:
                 maxEval = evaluation
                 best_move = move
             alpha = max(alpha, evaluation)
             if beta <= alpha:
                 break
-        
         return maxEval, best_move
     else:
         minEval = float('inf')
         best_move = None
-        for move in get_all_moves(position, RED, game):
-            evaluation = minimax(move, depth-1, alpha, beta, True, game)[0]
+        opponent_color = WHITE if ai_color == RED else RED
+        for move in get_all_moves(position, opponent_color, game):
+            evaluation = minimax(move, depth-1, alpha, beta, True, game, ai_color)[0]
             if evaluation < minEval:
                 minEval = evaluation
                 best_move = move
             beta = min(beta, evaluation)
             if beta <= alpha:
                 break
-        
         return minEval, best_move
 
 
