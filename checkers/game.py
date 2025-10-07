@@ -40,23 +40,28 @@ class Game:
         return False
 
     def _move(self, row, col):
-        piece   = self.board.get_piece(row, col)
+        piece = self.board.get_piece(row, col)
         if self.selected and piece == 0 and (row, col) in self.valid_moves:
-            # 1. Move the piece
             self.board.move(self.selected, row, col)
-
-            # 2. Handle captures
             skipped = self.valid_moves[(row, col)]
             if skipped:
                 self.board.remove(skipped)
-                # reset on capture
                 self.board.no_capture_moves = 0
-            else:
-                # increment on non‐capture
-                self.board.no_capture_moves += 1
 
-            # 3. Switch turns
+                # After a capture, check for further jumps
+                self.selected = self.board.get_piece(row, col)
+                new_moves = self.board.get_valid_moves(self.selected)
+                # Only keep moves that are captures
+                capture_moves = {move: skip for move, skip in new_moves.items() if skip}
+                if capture_moves:
+                    self.valid_moves = capture_moves
+                    return True  # Don't change turn, allow another jump
+            else:
+                self.board.no_capture_moves += 1
+                self.selected = None
+
             self.change_turn()
+            self.selected = None
         else:
             return False
 

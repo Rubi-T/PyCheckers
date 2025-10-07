@@ -46,6 +46,7 @@ def simulate_move(piece, move, board, game, skip):
 
 def get_all_moves(board, color, game):
     moves = []
+    capturing_moves = []
 
     for piece in board.get_all_pieces(color):
         valid_moves = board.get_valid_moves(piece)
@@ -53,6 +54,29 @@ def get_all_moves(board, color, game):
             temp_board = deepcopy(board)
             temp_piece = temp_board.get_piece(piece.row, piece.col)
             new_board = simulate_move(temp_piece, move, temp_board, game, skip)
-            moves.append(new_board)
-    
+            if skip:
+                chain_boards = get_chain_jumps(new_board, temp_piece, game, color)
+                if chain_boards:
+                    capturing_moves.extend(chain_boards)
+                else:
+                    capturing_moves.append(new_board)
+            else:
+                moves.append(new_board)
+
+    # If any capturing moves exist, only return those
+    return capturing_moves if capturing_moves else moves
+
+def get_chain_jumps(board, piece, game, color):
+    moves = []
+    valid_moves = board.get_valid_moves(piece)
+    for move, skip in valid_moves.items():
+        if skip:
+            temp_board = deepcopy(board)
+            temp_piece = temp_board.get_piece(piece.row, piece.col)
+            new_board = simulate_move(temp_piece, move, temp_board, game, skip)
+            further_jumps = get_chain_jumps(new_board, temp_piece, game, color)
+            if further_jumps:
+                moves.extend(further_jumps)
+            else:
+                moves.append(new_board)
     return moves
