@@ -2,11 +2,12 @@ import pygame
 from checkers.constants import WIDTH, HEIGHT, SQUARE_SIZE, RED, WHITE, HUMAN_VS_AI, AI_VS_AI, HUMAN_VS_HUMAN
 from checkers.game import Game
 from minimax.algorithm import minimax
+from menu.menu import main_menu
 
 FPS = 60
 
-WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Checkers')
+window = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('DDA Checkers')
 
 def setup_mode_and_depths():
     # 1. Let user pick game mode
@@ -39,10 +40,11 @@ def get_row_col_from_mouse(pos):
 
 def main():
     pygame.init()
-    WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+    window = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
-    game = Game(WIN)
-    mode, depths = setup_mode_and_depths()
+    game = Game(window)
+    depths = (6, 1)
+    mode = main_menu(window)
 
     run = True
     while run:
