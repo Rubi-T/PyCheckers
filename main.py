@@ -6,9 +6,6 @@ from menu.menu import main_menu
 
 FPS = 60
 
-window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('DDA Checkers')
-
 def setup_mode_and_depths():
     # 1. Let user pick game mode
     modes = [HUMAN_VS_AI, AI_VS_AI, HUMAN_VS_HUMAN]
@@ -40,30 +37,34 @@ def get_row_col_from_mouse(pos):
 
 def main():
     pygame.init()
-    window = pygame.display.set_mode((WIDTH, HEIGHT))
+    game_window = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption('DDA Checkers')
     clock = pygame.time.Clock()
-    game = Game(window)
-    depths = (6, 1)
-    mode = main_menu(window)
+    game = Game(game_window)
+    depths = (4, 4)
+    mode = main_menu(game_window)
 
     run = True
     while run:
-        clock.tick(60)
+        clock.tick(FPS)
+
 
         # — Always pump events to stay responsive —
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             # Only handle human clicks when needed
-            elif event.type == pygame.MOUSEBUTTONDOWN and mode in (HUMAN_VS_AI, HUMAN_VS_HUMAN):
+            elif event.type == pygame.MOUSEBUTTONDOWN and mode in HUMAN_VS_AI:
                 row, col = get_row_col_from_mouse(event.pos)
                 game.select(row, col)
+                game.update()
+                pygame.time.delay(500)
 
         # — Then do the moves based on mode —
         if mode == AI_VS_AI:
             white_depth, red_depth = depths
             current_depth = white_depth if game.turn == WHITE else red_depth
-            is_max        = (game.turn == WHITE)
+            is_max = (game.turn == WHITE)
 
             _, new_board = minimax(
                 game.get_board(),
@@ -72,12 +73,12 @@ def main():
                 float('inf'),
                 is_max,
                 game,
-                WHITE
+                game.turn
             )
             game.ai_move(new_board)
-            pygame.time.delay(200)
+            pygame.time.delay(500)
 
-        elif mode == HUMAN_VS_AI and game.turn == RED:
+        elif mode == HUMAN_VS_AI and game.turn == WHITE:
             ai_depth = depths[0]
             _, new_board = minimax(
                 game.get_board(),
@@ -86,7 +87,7 @@ def main():
                 float('inf'),
                 False,
                 game,
-                RED
+                WHITE
             )
             game.ai_move(new_board)
 
@@ -99,36 +100,5 @@ def main():
             run = False
 
     pygame.quit()
-
-# def main():
-#     run = True
-#     clock = pygame.time.Clock()
-#     game = Game(WIN)
-#
-#     while run:
-#
-
-    #     clock.tick(FPS)
-    #
-    #     if game.turn == WHITE:
-    #         value, new_board = minimax(game.get_board(), 1, float('-inf'), float('inf'), WHITE, game)
-    #         game.ai_move(new_board)
-    #
-    #     if game.winner() != None:
-    #         print(game.winner())
-    #         run = False
-    #
-    #     for event in pygame.event.get():
-    #         if event.type == pygame.QUIT:
-    #             run = False
-    #
-    #         if event.type == pygame.MOUSEBUTTONDOWN:
-    #             pos = pygame.mouse.get_pos()
-    #             row, col = get_row_col_from_mouse(pos)
-    #             game.select(row, col)
-    #
-    #     game.update()
-    #
-    # pygame.quit()
 
 main()
