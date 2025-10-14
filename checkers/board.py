@@ -55,74 +55,140 @@ class Board:
         CONNECTIVITY_W, VULNERABILITY_W = 0.2, -0.3
 
         opponent_color = WHITE if ai_color == RED else RED
-        score = 0
+        score = 0.0
 
-        # Material and kings
-        score += MATERIAL_W * (self.white_left if ai_color == WHITE else self.red_left
-                                                                         - self.red_left if ai_color == WHITE else self.white_left)
-        score += KING_W * (self.white_kings if ai_color == WHITE else self.red_kings
-                                                                      - self.red_kings if ai_color == WHITE else self.white_kings)
+        # Material and kings - compute explicit counts to avoid conditional precedence bugs
+        ai_pieces = self.white_left if ai_color == WHITE else self.red_left
+        opp_pieces = self.red_left if ai_color == WHITE else self.white_left
+        score += MATERIAL_W * (ai_pieces - opp_pieces)
 
-        # Mobility
-        score += MOBILITY_W * (len(self.get_all_valid_moves(ai_color)) - len(self.get_all_valid_moves(opponent_color)))
+        ai_kings = self.white_kings if ai_color == WHITE else self.red_kings
+        opp_kings = self.red_kings if ai_color == WHITE else self.white_kings
+        score += KING_W * (ai_kings - opp_kings)
+
+        # Mobility - ensure get_all_valid_moves expects a color and works on this board
+        try:
+            ai_moves = len(self.get_all_valid_moves(ai_color))
+            opp_moves = len(self.get_all_valid_moves(opponent_color))
+        except Exception:
+            ai_moves = opp_moves = 0
+        score += MOBILITY_W * (ai_moves - opp_moves)
 
         for r in range(ROWS):
             for c in range(COLS):
                 piece = self.board[r][c]
-                if piece != 0:
-                    # Center control
-                    if piece.king:
-                        # Strong center bonus for kings
-                        if 2 <= r <= 5 and 2 <= c <= 5:
-                            if piece.color == ai_color:
-                                score += 1.0
-                            else:
-                                score -= 1.0
-                        # Strong edge penalty for kings
-                        if r == 0 or r == ROWS - 1 or c == 0 or c == COLS - 1:
-                            if piece.color == ai_color:
-                                score -= 1.0
-                            else:
-                                score += 1.0
-                    else:
-                        # Center control for non-kings
-                        if 2 <= r <= 5 and 2 <= c <= 5:
-                            if piece.color == ai_color:
-                                score += CENTER_W
-                            else:
-                                score -= CENTER_W
-                        # Edge safety for non-kings
-                        if r == 0 or r == ROWS - 1 or c == 0 or c == COLS - 1:
-                            if piece.color == ai_color:
-                                score += EDGE_W
-                            else:
-                                score -= EDGE_W
-                    # Advancement for non-kings
-                    if not piece.king:
-                        advance = r if piece.color == WHITE else (ROWS - 1 - r)
-                        if piece.color == ai_color:
-                            score += advance * ADVANCE_W
-                        else:
-                            score -= advance * ADVANCE_W
-                    # Connectivity (adjacent friendly pieces)
-                    adjacents = [(r + dr, c + dc) for dr in [-1, 1] for dc in [-1, 1]
-                                 if 0 <= r + dr < ROWS and 0 <= c + dc < COLS]
-                    for ar, ac in adjacents:
-                        adj_piece = self.board[ar][ac]
-                        if adj_piece != 0 and adj_piece.color == piece.color:
-                            if piece.color == ai_color:
-                                score += CONNECTIVITY_W
-                            else:
-                                score -= CONNECTIVITY_W
-                    # Vulnerability (can be captured next turn)
-                    # This requires a helper to check if piece is capturable
-                    if self.is_vulnerable(piece):
-                        if piece.color == ai_color:
-                            score += VULNERABILITY_W
-                        else:
-                            score -= VULNERABILITY_W
+                if piece == 0:
+                    continue
+
+                piece_is_ai = (piece.color == ai_color)
+
+                # Center control and edge penalties
+                if piece.king:
+                    if 2 <= r <= 5 and 2 <= c <= 5:
+                        score += (1.0 if piece_is_ai else -1.0)
+                    if r == 0 or r == ROWS - 1 or c == 0 or c == COLS - 1:
+                        score += (-1.0 if piece_is_ai else 1.0)
+                else:
+                    if 2 <= r <= 5 and 2 <= c <= 5:
+                        score += (CENTER_W if piece_is_ai else -CENTER_W)
+                    if r == 0 or r == ROWS - 1 or c == 0 or c == COLS - 1:
+                        score += (EDGE_W if piece_is_ai else -EDGE_W)
+
+                # Advancement for non-kings
+                if not piece.king:
+                    advance = r if piece.color == WHITE else (ROWS - 1 - r)
+                    score += (advance * ADVANCE_W) if piece_is_ai else (-advance * ADVANCE_W)
+
+                # Connectivity
+                adjacents = [(r + dr, c + dc) for dr in (-1, 1) for dc in (-1, 1)
+                             if 0 <= r + dr < ROWS and 0 <= c + dc < COLS]
+                for ar, ac in adjacents:
+                    adj_piece = self.board[ar][ac]
+                    if adj_piece != 0 and adj_piece.color == piece.color:
+                        score += (CONNECTIVITY_W if piece_is_ai else -CONNECTIVITY_W)
+
+                # Vulnerability - ensure is_vulnerable checks the board 'self' and piece identity on this board
+                if self.is_vulnerable(piece):
+                    score += (VULNERABILITY_W if piece_is_ai else -VULNERABILITY_W)
 
         return score
+
+    # def evaluate(self, ai_color):
+    #     # Weights (tune as needed)
+    #     MATERIAL_W, KING_W = 2.0, 3.5
+    #     ADVANCE_W, CENTER_W = 0.2, 0.2
+    #     EDGE_W, MOBILITY_W = 0.1, 0.2
+    #     CONNECTIVITY_W, VULNERABILITY_W = 0.2, -0.3
+    #
+    #     opponent_color = WHITE if ai_color == RED else RED
+    #     score = 0
+    #
+    #     # Material and kings
+    #     score += MATERIAL_W * (self.white_left if ai_color == WHITE else self.red_left
+    #                                                                      - self.red_left if ai_color == WHITE else self.white_left)
+    #     score += KING_W * (self.white_kings if ai_color == WHITE else self.red_kings
+    #                                                                   - self.red_kings if ai_color == WHITE else self.white_kings)
+    #
+    #     # Mobility
+    #     score += MOBILITY_W * (len(self.get_all_valid_moves(ai_color)) - len(self.get_all_valid_moves(opponent_color)))
+    #
+    #     for r in range(ROWS):
+    #         for c in range(COLS):
+    #             piece = self.board[r][c]
+    #             if piece != 0:
+    #                 # Center control
+    #                 if piece.king:
+    #                     # Strong center bonus for kings
+    #                     if 2 <= r <= 5 and 2 <= c <= 5:
+    #                         if piece.color == ai_color:
+    #                             score += 1.0
+    #                         else:
+    #                             score -= 1.0
+    #                     # Strong edge penalty for kings
+    #                     if r == 0 or r == ROWS - 1 or c == 0 or c == COLS - 1:
+    #                         if piece.color == ai_color:
+    #                             score -= 1.0
+    #                         else:
+    #                             score += 1.0
+    #                 else:
+    #                     # Center control for non-kings
+    #                     if 2 <= r <= 5 and 2 <= c <= 5:
+    #                         if piece.color == ai_color:
+    #                             score += CENTER_W
+    #                         else:
+    #                             score -= CENTER_W
+    #                     # Edge safety for non-kings
+    #                     if r == 0 or r == ROWS - 1 or c == 0 or c == COLS - 1:
+    #                         if piece.color == ai_color:
+    #                             score += EDGE_W
+    #                         else:
+    #                             score -= EDGE_W
+    #                 # Advancement for non-kings
+    #                 if not piece.king:
+    #                     advance = r if piece.color == WHITE else (ROWS - 1 - r)
+    #                     if piece.color == ai_color:
+    #                         score += advance * ADVANCE_W
+    #                     else:
+    #                         score -= advance * ADVANCE_W
+    #                 # Connectivity (adjacent friendly pieces)
+    #                 adjacents = [(r + dr, c + dc) for dr in [-1, 1] for dc in [-1, 1]
+    #                              if 0 <= r + dr < ROWS and 0 <= c + dc < COLS]
+    #                 for ar, ac in adjacents:
+    #                     adj_piece = self.board[ar][ac]
+    #                     if adj_piece != 0 and adj_piece.color == piece.color:
+    #                         if piece.color == ai_color:
+    #                             score += CONNECTIVITY_W
+    #                         else:
+    #                             score -= CONNECTIVITY_W
+    #                 # Vulnerability (can be captured next turn)
+    #                 # This requires a helper to check if piece is capturable
+    #                 if self.is_vulnerable(piece):
+    #                     if piece.color == ai_color:
+    #                         score += VULNERABILITY_W
+    #                     else:
+    #                         score -= VULNERABILITY_W
+    #
+    #     return score
 
     # def evaluate(self, ai_color):
     #     # weights

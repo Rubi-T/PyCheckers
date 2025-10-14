@@ -6,20 +6,20 @@ from checkers import game
 RED = (255,0,0)
 WHITE = (255, 255, 255)
 
-def minimax(position, depth, alpha, beta, max_player, game, ai_color):
+def minimax(position, depth, alpha, beta, max_player, game, current_color, ai_color):
     if depth == 0 or position.winner() is not None:
         return position.evaluate(ai_color), position
 
-    print()
-    print (max_player)
+    opponent_color = WHITE if current_color == RED else RED
 
+    print()
+    print(max_player)
     if max_player:
+        print("maximizing")
         maxEval = float('-inf')
         best_move = None
-        current_color = ai_color
-        print("maximizing")
         for move in get_all_moves(position, current_color, game):
-            evaluation = minimax(move, depth-1, alpha, beta, False, game, ai_color)[0]
+            evaluation = minimax(move, depth-1, alpha, beta, False, game, opponent_color, ai_color)[0]
             if evaluation > maxEval:
                 maxEval = evaluation
                 best_move = move
@@ -29,12 +29,11 @@ def minimax(position, depth, alpha, beta, max_player, game, ai_color):
                 break
         return maxEval, best_move
     else:
+        print("minimizing")
         minEval = float('inf')
         best_move = None
-        opponent_color = WHITE if ai_color == RED else RED
-        print("minimizing")
-        for move in get_all_moves(position, opponent_color, game):
-            evaluation = minimax(move, depth-1, alpha, beta, True, game, ai_color)[0]
+        for move in get_all_moves(position, current_color, game):
+            evaluation = minimax(move, depth-1, alpha, beta, True, game, opponent_color, ai_color)[0]
             if evaluation < minEval:
                 minEval = evaluation
                 best_move = move
@@ -43,6 +42,44 @@ def minimax(position, depth, alpha, beta, max_player, game, ai_color):
                 print("Alpha beta")
                 break
         return minEval, best_move
+
+# def minimax(position, depth, alpha, beta, max_player, game, ai_color):
+#     if depth == 0 or position.winner() is not None:
+#         return position.evaluate(ai_color), position
+#
+#     print()
+#     print (max_player)
+#
+#     if max_player:
+#         maxEval = float('-inf')
+#         best_move = None
+#         current_color = ai_color
+#         print("maximizing")
+#         for move in get_all_moves(position, current_color, game):
+#             evaluation = minimax(move, depth-1, alpha, beta, False, game, ai_color)[0]
+#             if evaluation > maxEval:
+#                 maxEval = evaluation
+#                 best_move = move
+#             alpha = max(alpha, evaluation)
+#             if beta <= alpha:
+#                 print("Alpha beta")
+#                 break
+#         return maxEval, best_move
+#     else:
+#         minEval = float('inf')
+#         best_move = None
+#         opponent_color = WHITE if ai_color == RED else RED
+#         print("minimizing")
+#         for move in get_all_moves(position, opponent_color, game):
+#             evaluation = minimax(move, depth-1, alpha, beta, True, game, ai_color)[0]
+#             if evaluation < minEval:
+#                 minEval = evaluation
+#                 best_move = move
+#             beta = min(beta, evaluation)
+#             if beta <= alpha:
+#                 print("Alpha beta")
+#                 break
+#         return minEval, best_move
 
 
 def simulate_move(piece, move, board, game, skip):
