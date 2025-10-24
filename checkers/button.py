@@ -10,9 +10,9 @@ class Button:
         self.hover_bg = hover_bg
         self.padding = padding
         self.pos = pos  # center position (x,y)
-
         self._render_text()
         self.rect = self.surface.get_rect(center=self.pos)
+        self.hover = False
 
     def _render_text(self):
         self.text_surf = self.font.render(self.text, True, self.text_color)

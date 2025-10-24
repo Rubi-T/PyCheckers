@@ -33,3 +33,31 @@ def main_menu(window, game):
                     return None
 
         pygame.display.update()
+
+def display_sidebar_menu(window):
+    # choose a font and size that mimics your sample (bold uppercase)
+    font = pygame.font.SysFont('Arial', 40, bold=True)
+
+    help_button = Button(text="Help", pos=(1200, 150), font=font, bg_color=(255,255,255), hover_bg=(230,230,230))
+    quit_button = Button(text="Quit", pos=(1200, 450), font=font, bg_color=(255,255,255), hover_bg=(230,230,230))
+
+    menu_mouse_pos = pygame.mouse.get_pos()
+
+    for b in (help_button, quit_button):
+        b.changeImageOnHover(menu_mouse_pos)
+        b.update(window)
+
+def sidebar_menu_input():
+    # choose a font and size that mimics your sample (bold uppercase)
+    font = pygame.font.SysFont('Arial', 40, bold=True)
+
+    help_button = Button(text="Help", pos=(1200, 150), font=font, bg_color=(255, 255, 255), hover_bg=(230, 230, 230))
+    quit_button = Button(text="Quit", pos=(1200, 450), font=font, bg_color=(255, 255, 255), hover_bg=(230, 230, 230))
+
+    menu_mouse_pos = pygame.mouse.get_pos()
+    if help_button.checkForInput(menu_mouse_pos):
+        return True
+    if quit_button.checkForInput(menu_mouse_pos):
+        pygame.quit()
+        return None
+    return False
