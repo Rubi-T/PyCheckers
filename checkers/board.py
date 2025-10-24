@@ -49,7 +49,7 @@ class Board:
 
     def evaluate(self, ai_color):
         # Weights (tune as needed)
-        MATERIAL_W, KING_W = 2.0, 4.0
+        MATERIAL_W, KING_W = 2.0, 3.5
         ADVANCE_W, CENTER_W = 0.3, 0.3
         EDGE_W, MOBILITY_W = 0.2, 0.3
         CONNECTIVITY_W, VULNERABILITY_W = 0.3, -0.2

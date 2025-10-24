@@ -2,7 +2,7 @@ import pygame
 import hashlib
 from .constants import RED, WHITE, BLUE, SQUARE_SIZE
 from checkers.board import Board
-
+from checkers.menu import display_sidebar_menu
 
 class Game:
     def __init__(self, win):
@@ -14,6 +14,7 @@ class Game:
     def update(self):
         self.board.draw(self.win)
         self.draw_valid_moves(self.valid_moves)
+        display_sidebar_menu(self.win)
         pygame.display.update()
 
     def _init(self):

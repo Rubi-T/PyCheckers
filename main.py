@@ -2,11 +2,11 @@ import pygame
 from checkers.constants import WIDTH, HEIGHT, SQUARE_SIZE, RED, WHITE, HUMAN_VS_AI, AI_VS_AI
 from checkers.game import Game
 from minimax.algorithm import minimax
-from menu.menu import main_menu
+from checkers.menu import main_menu, sidebar_menu_input
 
 FPS = 60
 MIN_DEPTH = 1
-MAX_DEPTH = 8
+MAX_DEPTH = 7
 DEPTH_STEP = 1      # The amount the depth changes between games
 STARTING_DEPTH = 3  # The starting depth of the dynamic AI (White)
 STATIC_DEPTH = 5    # The depth of the static AI (Red)
@@ -32,17 +32,34 @@ def main():
         while run:
             clock.tick(FPS)
 
-
             # — Always pump events to stay responsive —
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
                 # Only handle human clicks when needed
-                elif event.type == pygame.MOUSEBUTTONDOWN and mode in HUMAN_VS_AI:
-                    row, col = get_row_col_from_mouse(event.pos)
-                    game.select(row, col)
-                    game.update()
-                    pygame.time.delay(500)
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    if x < 1000 and mode in HUMAN_VS_AI:
+                        row, col = get_row_col_from_mouse((x, y))
+                        game.select(row, col)
+                        game.update()
+                        pygame.time.delay(500)
+                    else:
+                        if sidebar_menu_input():
+                            _, new_board = minimax(
+                                game.get_board(),
+                                MAX_DEPTH,              #Help is fixed at depth 7
+                                -float('inf'),
+                                float('inf'),
+                                True,
+                                game,
+                                game.turn,
+                                game.turn
+                            )
+                            game.ai_move(new_board)
+                            game.update()
+                            pygame.time.delay(500)
+
 
             # — Then do the moves based on mode —
             if mode == AI_VS_AI:
@@ -130,5 +147,6 @@ def main():
                         print(f"Stalemate and piece count equal ({white_pieces} vs {red_pieces}). No depth change.")
 
                 break
+
 
 main()
