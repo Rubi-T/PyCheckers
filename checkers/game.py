@@ -26,7 +26,7 @@ class Game:
 
     def winner(self):
         if self.draw_detected:
-            return "Draw"
+            return "Stalemate"
         return self.board.winner()
 
     def reset(self):
@@ -50,7 +50,7 @@ class Game:
         # If a state repeats 3 times, declare a draw
         if self.state_history[h] >= 3:
             self.draw_detected = True
-            print("Draw: Flip-flopping detected.")
+            print("Stalemate")
             return True
         return False
 

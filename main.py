@@ -1,5 +1,5 @@
 import pygame
-from checkers.constants import WIDTH, HEIGHT, SQUARE_SIZE, RED, WHITE, HUMAN_VS_AI, AI_VS_AI, HUMAN_VS_HUMAN
+from checkers.constants import WIDTH, HEIGHT, SQUARE_SIZE, RED, WHITE, HUMAN_VS_AI, AI_VS_AI
 from checkers.game import Game
 from minimax.algorithm import minimax
 from menu.menu import main_menu
@@ -7,30 +7,9 @@ from menu.menu import main_menu
 FPS = 60
 MIN_DEPTH = 1
 MAX_DEPTH = 8
-DEPTH_STEP = 1
-
-def setup_mode_and_depths():
-    # 1. Let user pick game mode
-    modes = [HUMAN_VS_AI, AI_VS_AI, HUMAN_VS_HUMAN]
-    print("Select game mode:")
-    for i, m in enumerate(modes, start=1):
-        print(f"{i}. {m}")
-    choice = int(input("Enter 1, 2 or 3: ").strip())
-    mode = modes[choice - 1]
-
-    # 2. Based on mode, ask for depths
-    if mode == AI_VS_AI:
-        white_depth = int(input("White AI depth (e.g. 2–6): ").strip())
-        red_depth   = int(input("Red AI depth   (e.g. 2–6): ").strip())
-        depths = (white_depth, red_depth)
-    elif mode == HUMAN_VS_AI:
-        ai_depth = int(input("AI depth (e.g. 2–6): ").strip())
-        depths = (ai_depth,)
-    else:
-        depths = ()  # Human vs Human needs no depth
-
-    return mode, depths
-
+DEPTH_STEP = 1      # The amount the depth changes between games
+STARTING_DEPTH = 3  # The starting depth of the dynamic AI (White)
+STATIC_DEPTH = 5    # The depth of the static AI (Red)
 
 def get_row_col_from_mouse(pos):
     x, y = pos
@@ -41,10 +20,10 @@ def get_row_col_from_mouse(pos):
 def main():
     pygame.init()
     game_window = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption('DDA Checkers')
+    pygame.display.set_caption('Dynamic Difficulty Checkers')
     clock = pygame.time.Clock()
     game = Game(game_window)
-    depths = (1, 4)
+    depths = [STARTING_DEPTH, STATIC_DEPTH]
 
     while True:
         mode = main_menu(game_window, game)
@@ -123,7 +102,7 @@ def main():
                     new_white_depth = min(MAX_DEPTH, depths[0] + DEPTH_STEP)
                     depths[0] = new_white_depth
                     print(f"Adjusting White depth up to {depths[0]}")
-                else:  # winner == "Draw" or other draw indicator
+                else:  # winner == "Stalemate" or other stalemate indicator
                     board = game.get_board()
                     # Prefer board attributes if present
                     white_pieces = getattr(board, "white_left", None)
@@ -143,17 +122,13 @@ def main():
 
                     if white_pieces > red_pieces:
                         depths[0] = max(MIN_DEPTH, depths[0] - DEPTH_STEP)
-                        print(
-                            f"Draw but White has more pieces ({white_pieces} vs {red_pieces}). Decreasing White depth to {depths[0]}")
+                        print(f"Stalemate but White has more pieces ({white_pieces} vs {red_pieces}). Decreasing White depth to {depths[0]}")
                     elif white_pieces < red_pieces:
                         depths[0] = min(MAX_DEPTH, depths[0] + DEPTH_STEP)
-                        print(
-                            f"Draw but Red has more pieces ({red_pieces} vs {white_pieces}). Increasing White depth to {depths[0]}")
+                        print(f"Stalemate but Red has more pieces ({red_pieces} vs {white_pieces}). Increasing White depth to {depths[0]}")
                     else:
-                        print(f"Draw and piece count equal ({white_pieces} vs {red_pieces}). No depth change.")
+                        print(f"Stalemate and piece count equal ({white_pieces} vs {red_pieces}). No depth change.")
 
                 break
-
-    pygame.quit()
 
 main()
