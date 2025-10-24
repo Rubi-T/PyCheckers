@@ -26,7 +26,7 @@ def main():
     depths = [STARTING_DEPTH, STATIC_DEPTH]
 
     while True:
-        mode = main_menu(game_window, game)
+        mode, depths = main_menu(game_window, game, depths)
 
         run = True
         while run:
